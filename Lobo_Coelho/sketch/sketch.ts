@@ -4,15 +4,31 @@ class Entity {
   y: number;
   step: number;
   image: p5.Image;
+  alive: boolean;
+  timeToReturn: number;
 
   constructor(x: number, y: number, step: number, image: p5.Image) {
     this.x = x;
     this.y = y;
     this.step = step;
     this.image = image;
+    this.alive = true;
+  }
+
+  update(): void {
+    if (!this.alive) {
+      this.timeToReturn --;
+      if (this.timeToReturn <= 0) {
+        this.alive = true;
+        this.timeToReturn = 0;
+      }
+    }
   }
 
   draw() {
+    if(!this.alive) {
+      return;
+    }
     image(this.image, this.x * this.step, this.y * this.step, this.step, this.step)
   }
 }
@@ -43,6 +59,8 @@ class Board {
   }
 }
 
+//VARIÁVEIS
+
 let wolf_img: p5.Image;
 let wolf_img2: p5.Image;
 let coelho_img: p5.Image;
@@ -57,10 +75,9 @@ let buraco: Entity;
 let pontosLobo: number = 0;
 let pontosCoelho: number = 0; 
 
+let timer: number = 100;
 
-let timer: number = 10;
-let b: boolean = true;
-
+//FUNÇÕES
 function loadImg(linkImg: string): p5.Image {
   return loadImage(
     linkImg,
@@ -79,10 +96,9 @@ function preload() {
   buraco_img = loadImg('../sketch/buraco.png');
 }
 
-
-
 function setup() {
   let size = 100;
+  frameRate(100);
   wolf = new Entity(2, 2, size, wolf_img);
   coelho = new Entity(1, 1, size, coelho_img);
   buraco = new Entity(-1,-1, size, buraco_img);
@@ -160,8 +176,12 @@ function movimentação(){
 }
 
 function capturaCoelho() {
-  coelho.x = Math.round(random(0, board.numColunas));
-  coelho.y = Math.round(random(0, board.numLinhas));
+  if(wolf.x === coelho.x && wolf.y === coelho.y) {
+    coelho.x = Math.round(random(0, board.numColunas));
+    coelho.y = Math.round(random(0, board.numLinhas));
+    pontosLobo += 10;
+  }
+  
 }
 
 function cairNoBuraco() {
@@ -189,12 +209,36 @@ function cairNoBuraco() {
 */  
 
  
-  
+  /*
   buraco.x = -1;
   buraco.y = -1;
   wolf.x = 0;
   wolf.y = 0;
+*/
+  if(wolf.x === buraco.x && wolf.y === buraco.y) {
+    pontosCoelho += 30;
+  
+    wolf.alive = false;
+    wolf.timeToReturn = 400;
+    buraco.x = -1;
+    buraco.y = -1;    
+  }
 
+  if (wolf.alive === true) {
+    return 
+  } else {
+      fill(148, 0, 211, 90);
+      rect(520, 555, 80, 50);
+      fill(255, 255, 0);
+      stroke(0);
+      strokeWeight(3);
+      textSize(30);
+      text(wolf.timeToReturn, 540, 590);
+      textSize(20);
+      text("Tempo Para Retornar :", 315, 585);
+  }
+  
+  
 }
 
 function fimDeJogo() {
@@ -205,11 +249,16 @@ function fimDeJogo() {
 
     fill(255, 255, 255);
     textAlign(CENTER, CENTER);
+
     textSize(20);
     text("PARABÉNS POR ESCAPAR, COELHO", 290, 220);
-
+    
     textSize(45);
     text("VOCÊ É UM VENCEDOR!", 290, 280);
+
+    textSize(10);
+    text("ATUALIZE A PÁGINA PARA JOGAR NOVAMENTE", 290, 500);
+
   } else if (pontosLobo >= 200) {
     fill(0, 255, 0);
     rect(0, 0, board.numColunas * size, board.numLinhas * size);
@@ -219,37 +268,34 @@ function fimDeJogo() {
     textSize(20);
     stroke(70, 0, 130);
     strokeWeight(1);
+
     text("PARABÉNS, LOBO", 290, 220);
 
     textSize(30);
     stroke(70, 0, 130);
     strokeWeight(1);
     text("VOCÊ É UM MONSTRO INDOMÁVEL!", 290, 280);
+
+    textSize(10);
+    text("ATUALIZE A PÁGINA PARA JOGAR NOVAMENTE", 290, 500);
   }
 }
 
-/*
 function tempoParaFuga() {
     if(frameCount % 60 === 0 && timer > 0) {
       timer--;
     }
     if(timer === 0) {
-      pontosCoelho = 200;
+      if (pontosLobo < 200) {
+        pontosCoelho = 200;
+      } else {
+        return false;
+      }
+        
     }
 }
-*/
 
-function draw() {
-  movimentação();
-  board.draw();
-  buraco.draw();
-  wolf.draw();
-  coelho.draw();
-  
-
-
-  //mostrar timer na tela
-  /*
+function showTime() {
   fill(255, 0, 0, 99);
   noStroke();
   rect(0, 0, 80, 40);
@@ -260,20 +306,23 @@ function draw() {
   } else {
     text("0:0" + timer, 10, 30);
   }
+}
 
-  */
-
-  //tempoParaFuga();
+function draw() {
+  movimentação();
+  wolf.update();
+  board.draw();
+  buraco.draw();
+  wolf.draw();
+  coelho.draw();
   
-  if(wolf.x === coelho.x && wolf.y === coelho.y) {
-    capturaCoelho();
-    pontosLobo += 10;
-  }
+  showTime();
 
-  if(wolf.x === buraco.x && wolf.y === buraco.y) {
-    //cairNoBuraco();
-    pontosCoelho += 30;    
-  }
+  tempoParaFuga();
+
+  capturaCoelho();
+
+  cairNoBuraco();
 
   //pontuação Lobo
   fill(0, 255, 0, 99)
@@ -298,5 +347,4 @@ function draw() {
 
   fimDeJogo();
 
-  //fneifnwofn
 }
