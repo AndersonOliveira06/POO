@@ -22,60 +22,48 @@ class Sala {
         }
     }
     
-    fazerReserva(id: string, telefone: string, numCadeira: number): boolean {
+
+    buscar(id: string): number {
+        for(let i = 0; i < this.cadeiras.length; i++) {
+            let cli = this.cadeiras[i];
+            if(cli !== null && id == cli.id) {  
+                
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+
+    fazerReserva(cliente: Cliente, numCadeira: number): boolean {
         if(numCadeira > this.cadeiras.length) {
             console.log("Esse número de cadeira não existe");
             return false;
         }
-
-        for(let i = 0; i < this.cadeiras.length; i++) {
-            let cli = this.cadeiras[i];
-            if(cli !== null) {
-                if(id == cli.id) {
-                    console.log("Falha: Cliente já está no Cinema");
-                    return false;
-                }
-            }
-        }
-
+        
         if(this.cadeiras[numCadeira] !== null) {
             console.log("Falha: Cadeira já está Ocupada");
             return false;
         }
 
-        let cliente = new Cliente(id, telefone);
-        if(cliente != undefined) {
-            this.cadeiras[numCadeira] = cliente;
+        if (this.buscar(cliente.id) != -1) {
+            console.log("Falha: Cliente já está no Cinema");
+            return false;
         }
-
+        
+      
+        this.cadeiras[numCadeira] = cliente;
         return true;
     }
 
     cancelarReserva(id: string) {
-
-        for (let c = 0; c < this.cadeiras.length; c++) {
-            let cli = this.cadeiras[c];
-            if(cli == null) {
-                console.log("Falha: Não existe reserva nessa cadeira");
-                break;
-            }
+        let posicao = this.buscar(id);
+        if (posicao == -1) {
+            this.cadeiras[posicao] = null;
+            return true;
         }
-
-        for (let j = 0; j < this.cadeiras.length; j++) {
-            let cli = this.cadeiras[j];
-            if(cli !== null && cli.id !== id ) {
-                console.log("Falha: Não existe essa pessoa na sala");
-                break;
-            }
-        }
-
-        for (let i = 0; i < this.cadeiras.length; i++) {
-            let cliente = this.cadeiras[i];
-            if(cliente !== null && id == cliente.id) {
-                this.cadeiras[i] = null;
-                break;
-            }
-        }
+        return false;
     }
 
 
@@ -101,5 +89,5 @@ class Sala {
 }
 
 let cinema = new Sala(5);
-cinema.fazerReserva("anderson", "86152", 2);
+cinema.fazerReserva(new Cliente("Anderson", "65198"), 2);
 console.log(cinema.toString());
